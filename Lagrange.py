@@ -16,8 +16,8 @@ def inputForLagrange():
         lim2 = ('999')
     else :
         return 'Ошибка ввода наличия ограничений'
-    lim1 = list(map(int, (lim1.split(' '))))
-    lim2 = list(map(int, (lim2.split(' '))))
+    lim1 = list(map(float, (lim1.split(' '))))
+    lim2 = list(map(float, (lim2.split(' '))))
 
     Z = input('Ограничивающая функция :  ')
     Final = {'p1': params[0],
@@ -95,12 +95,12 @@ def Lagrange(dictionary):
     surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,alpha=0.5,
                        linewidth=1, antialiased=False)
     if len(lim1) == 2 :
-        coord_x_p = np.array([i[x] for i in points if (int(i[x]) >= lim1[0] and int(i[x]) <= lim1[1])]) 
-        coord_y_p = np.array([i[y] for i in points if (int(i[y]) >= lim2[0] and int(i[y]) <= lim2[1])])
+        coord_x_p = np.array([float(i[x]) for i in points if (float(i[x]) >= lim1[0] and int(i[x]) <= lim1[1])]) 
+        coord_y_p = np.array([float(i[y]) for i in points if (float(i[y]) >= lim2[0] and int(i[y]) <= lim2[1])])
         coord_z_p = f(coord_x_p, coord_y_p)
     else:
-        coord_x_p = np.array([i[x] for i in points]) 
-        coord_y_p = np.array([i[y] for i in points])
+        coord_x_p = np.array([float(i[x]) for i in points]) 
+        coord_y_p = np.array([float(i[y]) for i in points])
         coord_z_p = f(coord_x_p, coord_y_p)
     
     ax.scatter3D(coord_x_p, coord_y_p, coord_z_p,c = 'yellow', s=250, alpha=1)
