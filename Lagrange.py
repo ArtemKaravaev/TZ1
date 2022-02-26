@@ -1,4 +1,5 @@
 def inputForLagrange():
+    from numpy import inf
     params = input('Список переменных через пробел : ')
     params = params.split(' ')
     if len(params) > 2:
@@ -6,10 +7,14 @@ def inputForLagrange():
     elif len(params) < 2 :
         print('Введено менее двух переменных')
     F = input('Функция в аналитическом виде :  ')
-    lim1 = input(f'Ограничения для {params[0]} через пробел :  ')
-    lim1 = lim1.split(' ')
-    lim2 = input(f'Ограничения для {params[1]} через пробел :  ')
-    lim2 = lim2.split(' ')
+    if L == '1':
+        lim1 = input(f'Ограничения для {params[0]} через пробел :  ')
+        lim2 = input(f'Ограничения для {params[1]} через пробел :  ')
+    elif L =='0':
+        lim1 = (f'{-inf} {inf}')
+        lim2 = (f'{-inf} {inf}')
+    else :
+        return 'Ошибка ввода наличия ограничений'
     Z = input('Ограничивающая функция :  ')
     Final = {'p1': params[0],
              'p2': params[1],
@@ -47,12 +52,17 @@ def Lagrange(dictionary):
                 [z.diff(y) , func.diff(x,y), func.diff(y,2)]])
     determinant = M.det()
     
+    G = Matrix([[func.diff(x,2), func.diff(x,y)],
+                [func.diff(x,y), func.diff(y,2)]])
+
     for i in points :
         if determinant.subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) > 0:
             print(i, 'условный максимум')
         elif determinant.subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) < 0:
             print(i , 'условный минимум')
-        else : ### тут должно быть ещё условие на седловую точку, пока не знаю как реализовать
-            print(i , 'требуется дополнительное исследование')
+        elif ((func.diff(x,2) > 0) * (G.det() > 0)) == 0 or ((func.diff(x,2) < 0) * (G.det() > 0)) == 0:
+            print(i , 'седловая точка')
+        else:
+            print(i , 'требуется дополнительное исследование')    
         
         
