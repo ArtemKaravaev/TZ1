@@ -15,7 +15,7 @@ def inputForLagrange():
         lim1 = ('999')
         lim2 = ('999')
     else :
-        return 'Ошибка ввода наличия ограничений'
+        print('Ошибка ввода наличия ограничений')
     lim1 = list(map(float, (lim1.split(' '))))
     lim2 = list(map(float, (lim2.split(' '))))
 
@@ -36,8 +36,10 @@ def Lagrange(dictionary):
     import numpy as np
     from matplotlib import cm
     from matplotlib.ticker import LinearLocator
+    from mpl_toolkits.mplot3d import Axes3D
     # преобразование данных для символьного вычислнения
     from sympy.parsing.sympy_parser import parse_expr
+
     data = dictionary
     func = data['func'] + ' + l *' + '(' + data['Z'] + ')'
     func = parse_expr(func)
@@ -65,16 +67,54 @@ def Lagrange(dictionary):
                 [func.diff(x,y), func.diff(y,2)]])
 
     for i in points :
+        if len(lim1) == len(lim2) == 2 :
+
+            if (float(i[x]) >= lim1[0] and float(i[x]) <= lim1[1]) and (float(i[y]) >= lim2[0] and float(i[y]) <= lim2[1]):
+
+                if determinant.subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) > 0:
+                    i['тип'] ='условный максимум'
+                    i['Func'] = func.subs(x,i[x]).subs(y,i[y]).subs(l,i[l])
+                    print(i)
+            
+                elif determinant.subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) < 0:
+                    i['тип'] ='условный минимум'
+                    i['Func'] = func.subs(x,i[x]).subs(y,i[y]).subs(l,i[l])
+                    print(i)
+    
+                elif (((func.diff(x,2).subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) > 0) * (G.det().subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) > 0)) == 0 or
+                ((func.diff(x,2).subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) < 0) * (G.det().subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) > 0))) == 0:
+                    i['тип'] ='седловая точка'
+                    i['Func'] = func.subs(x,i[x]).subs(y,i[y]).subs(l,i[l])
+                    print(i)
+
+                else:
+                    i['тип'] = 'требуется дополнительное исследование'
+                    i['Func'] = func.subs(x,i[x]).subs(y,i[y]).subs(l,i[l])
+                    print(i)    
+    else :
         if determinant.subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) > 0:
-            print(i, 'условный максимум')
+
+            i['тип'] ='условный максимум'
+            i['Func'] = func.subs(x,i[x]).subs(y,i[y]).subs(l,i[l])
+            print(i)
+
         elif determinant.subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) < 0:
-            print(i , 'условный минимум')
-        elif ((func.diff(x,2) > 0) * (G.det() > 0)) == 0 or ((func.diff(x,2) < 0) * (G.det() > 0)) == 0:
-            print(i , 'седловая точка')
+            i['тип'] ='условный минимум'
+            i['Func'] = func.subs(x,i[x]).subs(y,i[y]).subs(l,i[l])
+            print(i)
+    
+        elif (((func.diff(x,2).subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) > 0) * (G.det().subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) > 0)) == 0 or
+        ((func.diff(x,2).subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) < 0) * (G.det().subs(x,i[x]).subs(y,i[y]).subs(l,i[l]) > 0))) == 0:
+            i['тип'] ='седловая точка'
+            i['Func'] = func.subs(x,i[x]).subs(y,i[y]).subs(l,i[l])
+            print(i)
+
         else:
-            print(i , 'требуется дополнительное исследование')    
-        
-    %matplotlib notebook
+            i['тип'] = 'требуется дополнительное исследование'
+            i['Func'] = func.subs(x,i[x]).subs(y,i[y]).subs(l,i[l])
+            print(i)   
+
+    #%matplotlib notebook
 
     plt.rcParams['figure.figsize'] = (8,6)
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
@@ -92,18 +132,15 @@ def Lagrange(dictionary):
     f = lambdify([x,y], z)
     Z = f(X,Y)
 
-    surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,alpha=0.5,
+    surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm, alpha=0.5,
                        linewidth=1, antialiased=False)
-    if len(lim1) == 2 :
-        coord_x_p = np.array([float(i[x]) for i in points if (float(i[x]) >= lim1[0] and int(i[x]) <= lim1[1])]) 
-        coord_y_p = np.array([float(i[y]) for i in points if (float(i[y]) >= lim2[0] and int(i[y]) <= lim2[1])])
-        coord_z_p = f(coord_x_p, coord_y_p)
-    else:
-        coord_x_p = np.array([float(i[x]) for i in points]) 
-        coord_y_p = np.array([float(i[y]) for i in points])
-        coord_z_p = f(coord_x_p, coord_y_p)
+
+    coord_x_p = np.array([float(i[x]) for i in points if 'тип' in i]) 
+    coord_y_p = np.array([float(i[y]) for i in points if 'тип' in i])
+    coord_z_p = f(coord_x_p, coord_y_p)
     
-    ax.scatter3D(coord_x_p, coord_y_p, coord_z_p,c = 'yellow', s=250, alpha=1)
+    ax.scatter3D(coord_x_p, coord_y_p, coord_z_p, c = 'yellow', s=50, alpha=1)
+
     ax.set_xlabel(f'{x}')
     ax.set_ylabel(f'{y}')
     ax.set_zlabel(f'{z}')
