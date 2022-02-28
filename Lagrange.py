@@ -32,11 +32,7 @@ def inputForLagrange():
 from sympy import *
 
 def Lagrange(dictionary):
-    import matplotlib.pyplot as plt
     import numpy as np
-    from matplotlib import cm
-    from matplotlib.ticker import LinearLocator
-    from mpl_toolkits.mplot3d import Axes3D
     # преобразование данных для символьного вычислнения
     from sympy.parsing.sympy_parser import parse_expr
 
@@ -114,34 +110,64 @@ def Lagrange(dictionary):
             i['Func'] = func.subs(x,i[x]).subs(y,i[y]).subs(l,i[l])
             print(i)   
 
-    #%matplotlib notebook
-
-    plt.rcParams['figure.figsize'] = (8,6)
-    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-
+            
     if len(lim1) == 2 :
         xx = np.linspace(lim1[0] - 5, lim1[1] + 5, 1000)
         yy = np.linspace(lim2[0] - 5, lim2[1] + 5, 1000)
-    
     else:
         xx = np.linspace(-20, 20, 1000)
         yy = np.linspace(-20, 20, 1000)
-    
+        
     X, Y = np.meshgrid(xx, yy)
 
     f = lambdify([x,y], z)
     Z = f(X,Y)
-
-    surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm, alpha=0.5,
-                       linewidth=1, antialiased=False)
-
+    
     coord_x_p = np.array([float(i[x]) for i in points if 'тип' in i]) 
     coord_y_p = np.array([float(i[y]) for i in points if 'тип' in i])
     coord_z_p = f(coord_x_p, coord_y_p)
     
-    ax.scatter3D(coord_x_p, coord_y_p, coord_z_p, c = 'yellow', s=50, alpha=1)
+    return {'x' : x, # переменная 1
+            'y' : y, # переменная 2
+            'z': z, # начальная функция
+            'func' : func, # функция с лямбдой
+            'x_p' : coord_x_p, # координаты точек экстремумов по 1 пер (после ограничений)
+            'y_p' : coord_y_p, # координаты точек экстремумов по 2 пер (после ограничений)
+            'z_p' : coord_z_p, # значения функции в экстремумах,
+            'X' : X,
+            'Y' : Y,
+            'Z' : Z}
 
-    ax.set_xlabel(f'{x}')
-    ax.set_ylabel(f'{y}')
-    ax.set_zlabel(f'{z}')
+def graph(d):
+
+    #%matplotlib notebook
+    from matplotlib import cm
+    from matplotlib.ticker import LinearLocator
+    from mpl_toolkits.mplot3d import Axes3D
+    import matplotlib.pyplot as plt
+    
+    plt.rcParams['figure.figsize'] = (8,6)
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    
+
+    surf = ax.plot_surface(d['X'], d['Y'], d['Z'], cmap=cm.coolwarm,
+                           alpha=0.5,linewidth=1, antialiased=False)
+    
+    ax.scatter3D(d['x_p'], d['y_p'], d['z_p'], c = 'yellow', s=50, alpha=1)
+
+    ax.set_xlabel(f"{d['x']}")
+    ax.set_ylabel(f"{d['y']}")
+    ax.set_zlabel(f"{d['z']}")
+    plt.show()
+
+def graph_lines(d):
+    import matplotlib.pyplot as plt
+    
+    plt.rcParams['figure.figsize'] = (6,6)
+    fig, ax = plt.subplots()
+    
+    ax.contour(d['Z'])
+    ax.clabel(ax.contour(d['Z']))
+    
+    ax.set_title(f'Линии уровня функции {d["z"]}')
     plt.show()
