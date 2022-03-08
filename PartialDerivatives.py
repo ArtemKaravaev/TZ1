@@ -16,6 +16,8 @@ def inputChastProizv():
         lim2 = ('999')
     else :
         return 'Ошибка ввода наличия ограничений'
+    
+   
     lim1 = list(map(float, (lim1.split(' '))))
     lim2 = list(map(float, (lim2.split(' '))))
     Final = {'p1': params[0],
@@ -48,6 +50,7 @@ def chastproizv(dictionary):
     A = dx.diff(p1)
     B = dx.diff(p2)
     C = dy.diff(p2)
+    
     for i in points:
         A = A.subs([(x, i[x]), (y, i[y])])
         B = B.subs([(x, i[x]), (y, i[y])])
@@ -101,29 +104,56 @@ def chastproizv(dictionary):
     else:
         xx = np.linspace(-20, 20, 1000)
         yy = np.linspace(-20, 20, 1000)
-    
-    X, Y = np.meshgrid(xx, yy)
-
+        
+        
     f = lambdify([x,y], func)
-    Z = f(X,Y)
+  
 
     coord_x_p = np.array([float(i[x]) for i in points if 'тип' in i]) 
     coord_y_p = np.array([float(i[y]) for i in points if 'тип' in i])
     coord_z_p = f(coord_x_p, coord_y_p)
+    M = input('Масштабируем график, 1-да , 0- нет :')
+    if M=='1':
+        limx1=(float(sum(coord_x_p)/len(coord_x_p))+max(coord_x_p))
+        limx2=(float(sum(coord_x_p)/len(coord_x_p))-max(coord_x_p))
+        limy1=(float(sum(coord_y_p)/len(coord_y_p))+max(coord_y_p))
+        limy2=(float(sum(coord_y_p)/len(coord_y_p))-max(coord_y_p))
+        xx = np.linspace(limx2, limx1, 1000)
+        yy = np.linspace(limy2, limx1 , 1000)
         
+    elif M =='0':
+        limx1 = ('999')
+        limx2 = ('999')
+        limy1 = ('999')
+        limy2 = ('999')
+        
+    else :
+        return 'Ошибка ввода наличия ограничений'
+    
+    t = [i['тип'] for i in points if i['тип']]
+    X, Y = np.meshgrid(xx, yy)
+
+    Z = f(X,Y)
+
+    
+  
     return {'x' : x, # переменная 1
             'y' : y, # переменная 2
             'func' : func, # функция с лямбдой
             'x_p' : coord_x_p, # координаты точек экстремумов по 1 пер (после ограничений)
             'y_p' : coord_y_p, # координаты точек экстремумов по 2 пер (после ограничений)
             'z_p' : coord_z_p, # значения функции в экстремумах,
+            'type': t,
             'X' : X,
             'Y' : Y,
-            'Z' : Z}
+            'Z' : Z,
+           'limx1' : limx1,
+           'limx2' : limx2,
+           'limy1' : limy1,
+           'limy2' : limy2 }
 
 def graph(d):
-
-    #%matplotlib notebook
+    
     from matplotlib import cm
     from matplotlib.ticker import LinearLocator
     from mpl_toolkits.mplot3d import Axes3D
@@ -132,12 +162,29 @@ def graph(d):
     plt.rcParams['figure.figsize'] = (8,6)
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     
+   
+    
 
-    surf = ax.plot_surface(d['X'], d['Y'], d['Z'], cmap=cm.coolwarm,
+    surf = ax.plot_surface(d['X'], d['Y'], d['Z'], cmap='Purples',
                            alpha=0.5,linewidth=1, antialiased=False)
     
-    ax.scatter3D(d['x_p'], d['y_p'], d['z_p'], c = 'yellow', s=50, alpha=1)
-
+   
+   
+    for i in range(len(d['type'])):
+        if d['type'][i] == 'седловая точка':
+            ax.scatter3D(d['x_p'][i], d['y_p'][i], d['z_p'][i], c = 'red', s=50, alpha=1)
+            
+        elif d['type'][i] == 'условный минимум':
+            ax.scatter3D(d['x_p'][i], d['y_p'][i], d['z_p'][i], c = 'yellow', s=50, alpha=1)
+            
+        elif d['type'][i] == 'условный максимум':
+            ax.scatter3D(d['x_p'][i], d['y_p'][i], d['z_p'][i], c = 'green', s=50, alpha=1)
+        
+        elif d['type'][i] == 'требуется дополнительное исследование':
+            ax.scatter3D(d['x_p'][i], d['y_p'][i], d['z_p'][i], c = 'orange', s=50, alpha=1)
+    
+   
+    
     ax.set_xlabel(f"{d['x']}")
     ax.set_ylabel(f"{d['y']}")
     ax.set_zlabel(f"{d['func']}")
@@ -154,3 +201,4 @@ def graph_lines(d):
     
     ax.set_title(f'Линии уровня функции {d["func"]}')
     plt.show()
+ 
